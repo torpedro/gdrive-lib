@@ -1,0 +1,3 @@
+#!/bin/bash
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+${DIR}/../.google-drive-venv/bin/python3 ${DIR}/../src/gdrive_lib/commander.py "$@"
