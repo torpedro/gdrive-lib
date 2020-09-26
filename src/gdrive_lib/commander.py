@@ -20,11 +20,11 @@ def ls(args) -> None:
         full_path = os.path.join(args.path, file.name)
 
         color = NOCOLOR
-        if file.isDir:
+        if file.is_dir:
             color = BLUE
 
         if args.l:
-            timestamp = file.modifiedTime
+            timestamp = file.modified_time
             print("%s%s (%s)%s" % (color, full_path, timestamp, NOCOLOR))
         else:
             print("%s%s%s" % (color, full_path, NOCOLOR))

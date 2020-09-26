@@ -16,13 +16,13 @@ def download_all_files_in_directory(remote_dir, download_dir):
     drive = Drive("https://www.googleapis.com/auth/drive.readonly")
     files = drive.ls(remote_dir)
     for file in files:
-        if not file.isDir:
+        if not file.is_dir:
             local_path = os.path.join(download_dir, file.name)
 
             do_download = True
             if args.only_new and os.path.isfile(local_path):
                 mod_time = datetime.fromtimestamp(os.path.getmtime(local_path))
-                if mod_time > file.modifiedTime:
+                if mod_time > file.modified_time:
                     print("Skipping %s, because the local file is newer." % (file.name))
                     do_download = False
 

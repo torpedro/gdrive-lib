@@ -14,7 +14,7 @@ def download_all_files_from_directory_rec(source_dir, target_dir):
     drive = Drive("https://www.googleapis.com/auth/drive.readonly")
     files = drive.ls(source_dir)
     for file in files:
-        if not file.isDir:
+        if not file.is_dir:
             print("Downloading %s" % (file.name))
             output_file = os.path.join(target_dir, file.name)
             drive.download(file.path, output_file)

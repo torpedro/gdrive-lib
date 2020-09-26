@@ -2,6 +2,7 @@
 
 import io
 import datetime
+from typing import List, Optional
 from os.path import join, basename, dirname
 from googleapiclient.discovery import build # type: ignore
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload # type: ignore
@@ -59,7 +60,7 @@ class Drive():
         # pylint: disable=E1101
         return self.service.files()
 
-    def __add_file(self, base_path, data):
+    def __add_file(self, base_path, data) -> Optional[File]:
         """Creates a new file in our internal cache of the Drive fs."""
 
         f = File(base_path, data)
@@ -85,7 +86,7 @@ class Drive():
         self.ls(dirname(remote))
         return remote in self.fs
 
-    def ls(self, path):
+    def ls(self, path) -> List[File]:
         """Tries to find the file at the path and all its children if it's a folder."""
 
         if path not in self.fs:
@@ -104,7 +105,7 @@ class Drive():
         results = self.__api().list(pageSize=500, q=query, fields=fields).execute()
         items = results.get('files', [])
         if items:
-            files = []
+            files : List[File] = []
             for data in items:
                 f = self.__add_file(path, data)
                 if f is not None:
