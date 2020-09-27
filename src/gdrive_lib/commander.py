@@ -4,8 +4,9 @@ import sys
 import os
 import csv
 import argparse
+import re
 from .drive.drive import Drive
-from .drive.drive_api import DRIVE_READONLY
+from .drive.drive_api import DRIVE_READONLY, DRIVE_PER_FILE
 from .sheets.sheets import Sheets
 from .sheets.sheets_api import SHEET_FULL, SHEET_READONLY
 
@@ -13,7 +14,7 @@ BLUE = "\033[94m"
 NOCOLOR = "\033[0m"
 
 def ls(args) -> None:
-    drive = Drive(DRIVE_READONLY, credentials=args.creds, token=args.token)
+    drive = Drive(DRIVE_READONLY, credentials=args.creds, token=args.drive_token)
     files = drive.ls(args.path)
 
     print(args.path)
@@ -64,6 +65,42 @@ def csv_upload(args):
     sheet = sheets.get_spreadsheet(f.id)
     sheet.upload_csv(args.CSV, args.SHEET)
 
+class ScpArgs:
+    is_remote : bool
+    path : str
+
+    def __init__(self, path):
+        m = re.match(r"^drive:(.+)$", path)
+        if m:
+            self.is_remote = True
+            self.path = m.group(1)
+            print(m.group(1))
+        else:
+            self.is_remote = False
+            self.path = path
+
+
+def scp(args):
+    src : ScpArgs = args.src
+    dst : ScpArgs = args.dst
+
+    if src.is_remote and (not dst.is_remote):
+        print("Downloading %s to %s" % (src.path, dst.path))
+        drive = Drive(DRIVE_READONLY, credentials=args.creds, token=args.drive_token)
+        drive.ls(src.path)
+        drive.download(src.path, dst.path)
+
+    elif (not src.is_remote) and dst.is_remote:
+        print("Uploading %s to %s" % (src.path, dst.path))
+        drive = Drive(DRIVE_PER_FILE, credentials=args.creds, token=args.drive_token)
+        drive.ls(dst.path)
+        drive.upload(src.path, dst.path)
+
+
+    else:
+        print("One of the two given paths must be local while the other is remote!")
+        sys.exit(-1)
+
 def main():
     parser = argparse.ArgumentParser()
     def print_help(_arg):
@@ -74,7 +111,7 @@ def main():
     def new_drive_subparser(cmd, func):
         sub = subparsers.add_parser(cmd)
         sub.add_argument("--creds", default="credentials.json", metavar="CREDENTIALS.JSON")
-        sub.add_argument("--token", default="token.json", metavar="TOKEN.JSON")
+        sub.add_argument("--token", default="token.json", metavar="TOKEN.JSON", dest="drive_token")
         sub.set_defaults(func=func)
         return sub
 
@@ -89,6 +126,10 @@ def main():
     p_ls = new_drive_subparser("ls", ls)
     p_ls.add_argument("path", type=str, metavar="PATH")
     p_ls.add_argument("-l", action='store_true')
+
+    p_ls = new_drive_subparser("scp", scp)
+    p_ls.add_argument("src", type=ScpArgs, metavar="SOURCE")
+    p_ls.add_argument("dst", type=ScpArgs, metavar="TARGET")
 
     p_csv_download = new_sheets_subparser("csv-download", csv_download)
     p_csv_download.add_argument("SPREADSHEET", type=str, help="Path to the SPREADSHEET")

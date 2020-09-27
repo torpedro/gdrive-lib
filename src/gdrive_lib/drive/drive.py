@@ -42,7 +42,7 @@ class Drive():
         self.ls(dirname(remote))
         return self.fs.file_exists_at_path(remote)
 
-    def ls(self, path) -> List[File]:
+    def ls(self, path : str) -> List[File]:
         """Tries to find the file at the path and all its children if it's a folder."""
 
         if not self.fs.file_exists_at_path(path):
@@ -69,7 +69,7 @@ class Drive():
             return files
         return []
 
-    def download(self, remote, local) -> None:
+    def download(self, remote : str, local : str) -> None:
         """Downloads the contents of the [remote] file and writes them to the [local] target."""
 
         if not self.fs.file_exists_at_path(remote):
@@ -90,7 +90,7 @@ class Drive():
         while done is False:
             _status, done = downloader.next_chunk()
 
-    def mv(self, path, to_folder) -> Optional[File]:
+    def mv(self, path : str, to_folder : str) -> Optional[File]:
         """Move the file at [path] to the given folder"""
 
         f = self.fs.by_path(path)
@@ -109,7 +109,7 @@ class Drive():
         self.__rm_file(f)
         return self.__add_file(to_folder, new_data)
 
-    def mkdir(self, remote) -> Optional[File]:
+    def mkdir(self, remote : str) -> Optional[File]:
         """Creates a new folder if nothing exists at that path yet."""
 
         self.ls(dirname(remote))
@@ -132,7 +132,7 @@ class Drive():
         return self.__add_file(parent_path, f)
 
 
-    def upload(self, local, remote) -> Optional[File]:
+    def upload(self, local : str, remote : str) -> Optional[File]:
         """Upload the given [local] file to the [remote] location"""
 
         file_name = basename(remote)
