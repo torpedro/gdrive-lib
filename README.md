@@ -20,7 +20,7 @@ bin/gdrive scp ~/test.pdf drive:/test.pdf
 bin/gdrive csv-download "/My Spreadheet" "Sheet 1" ~/output.csv
 
 # Upload a CSV into a spreadsheet
-bin/gdrive csv-uploadt "/My Spreadsheet" "Upload" ~/upload.csv
+bin/gdrive csv-upload "/My Spreadsheet" "Upload" ~/upload.csv
 ```
 
 ## Setup
