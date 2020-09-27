@@ -1,5 +1,7 @@
 # Google Drive Lib
 
+[![Build Status](https://travis-ci.org/torpedro/gdrive-lib.svg?branch=master)](https://travis-ci.org/torpedro/gdrive-lib)
+
 This is a library to write simple Google Drive management/backup tools using Python.
 
 ## Usage
