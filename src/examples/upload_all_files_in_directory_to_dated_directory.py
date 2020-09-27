@@ -6,7 +6,7 @@ dirname = os.path.dirname(__file__)
 sys.path.append(("%s/.." % (dirname)))
 
 # pylint: disable=wrong-import-position
-from gdrive_lib.drive import Drive
+from gdrive_lib.drive.drive import Drive
 # pylint: enable=wrong-import-position
 
 def upload_all_files_to_a_dated_directory(source_dir):

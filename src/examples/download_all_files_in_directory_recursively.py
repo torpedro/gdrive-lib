@@ -5,7 +5,7 @@ dirname = os.path.dirname(__file__)
 sys.path.append(("%s/.." % (dirname)))
 
 # pylint: disable=wrong-import-position
-from gdrive_lib.drive import Drive
+from gdrive_lib.drive.drive import Drive
 # pylint: enable=wrong-import-position
 
 def download_all_files_from_directory_rec(source_dir, target_dir):

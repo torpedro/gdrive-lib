@@ -5,7 +5,7 @@ import os
 import csv
 import argparse
 from .perms import DRIVE_READONLY, SHEET_READONLY, SHEET_FULL
-from .drive import Drive
+from .drive.drive import Drive
 from .sheets.sheets import Sheets
 
 BLUE = "\033[94m"
