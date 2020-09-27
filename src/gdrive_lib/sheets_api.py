@@ -3,7 +3,7 @@
 from typing import Any
 from googleapiclient.discovery import build # type: ignore
 from httplib2 import Http # type: ignore
-from .drive_api_utils import init_credentials
+from .api_utils import init_credentials
 
 class SheetsApi:
     """Handles interactions with Sheet documents."""
@@ -14,11 +14,11 @@ class SheetsApi:
             token="token.json") -> None:
 
         creds = init_credentials(credentials, token, scope)
-        self.service = build('sheets', 'v4', http=creds.authorize(Http()))
+        self.__service = build('sheets', 'v4', http=creds.authorize(Http()))
 
     def __api(self) -> Any:
         # pylint: disable=E1101
-        return self.service.spreadsheets()
+        return self.__service.spreadsheets()
 
     def values(self) -> Any:
         return self.__api().values()

@@ -4,10 +4,8 @@ import io
 import datetime
 from typing import List, Optional
 from os.path import join, basename, dirname
-from googleapiclient.discovery import build # type: ignore
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload # type: ignore
-from httplib2 import Http # type: ignore
-from .drive_api_utils import init_credentials
+from .drive_api import DriveApi
 
 ROOT = {
     "id": "root",
@@ -47,18 +45,13 @@ class Drive():
             scope="https://www.googleapis.com/auth/drive.readonly",
             credentials="credentials.json",
             token="token.json"):
-        self.__init_service(scope, credentials, token)
+        self.__api = DriveApi(scope, credentials, token)
         self.id_map = {}
         self.fs = {}
         self.__add_file("/", ROOT)
 
-    def __init_service(self, scope, credentials, token):
-        creds = init_credentials(credentials, token, scope)
-        self.service = build('drive', 'v3', http=creds.authorize(Http()))
-
-    def __api(self):
-        # pylint: disable=E1101
-        return self.service.files()
+    def __files(self):
+        return self.__api.files()
 
     def __add_file(self, base_path, data) -> Optional[File]:
         """Creates a new file in our internal cache of the Drive fs."""
@@ -71,13 +64,13 @@ class Drive():
         self.fs[f.path] = f
         return f
 
-    def __rm_file(self, f):
+    def __rm_file(self, f) -> None:
         """Removes a file from our internal cache of the Drive fs."""
 
         del self.id_map[f.id]
         del self.fs[f.path]
 
-    def __locate_file(self, remote):
+    def __locate_file(self, remote) -> bool:
         """Returns true if the file exists on the remote Drive fs."""
 
         if remote in self.fs:
@@ -102,7 +95,7 @@ class Drive():
         query = "'%s' in parents" % (parent)
         fields = "nextPageToken, files(%s)" % (FILE_FIELDS)
 
-        results = self.__api().list(pageSize=500, q=query, fields=fields).execute()
+        results = self.__files().list(pageSize=500, q=query, fields=fields).execute()
         items = results.get('files', [])
         if items:
             files : List[File] = []
@@ -113,7 +106,7 @@ class Drive():
             return files
         return []
 
-    def download(self, remote, local):
+    def download(self, remote, local) -> None:
         """Downloads the contents of the [remote] file and writes them to the [local] target."""
 
         if not remote in self.fs:
@@ -127,24 +120,24 @@ class Drive():
             return None
 
 
-        request = self.__api().get_media(fileId=f.id)
+        request = self.__files().get_media(fileId=f.id)
         fh = io.FileIO(local, 'wb')
         downloader = MediaIoBaseDownload(fh, request)
         done = False
         while done is False:
             _status, done = downloader.next_chunk()
 
-    def mv(self, path, to_folder):
+    def mv(self, path, to_folder) -> Optional[File]:
         """Move the file at [path] to the given folder"""
 
         f = self.fs[path]
         folder_id = self.fs[to_folder].id
 
         # Retrieve the existing parents to remove
-        old_data = self.__api().get(fileId=f.id, fields='parents').execute()
+        old_data = self.__files().get(fileId=f.id, fields='parents').execute()
         previous_parents = ",".join(old_data.get('parents'))
         # Move the f to the new folder
-        new_data = self.__api().update(
+        new_data = self.__files().update(
             fileId=f.id,
             addParents=folder_id,
             removeParents=previous_parents,
@@ -153,7 +146,7 @@ class Drive():
         self.__rm_file(f)
         return self.__add_file(to_folder, new_data)
 
-    def mkdir(self, remote):
+    def mkdir(self, remote) -> Optional[File]:
         """Creates a new folder if nothing exists at that path yet."""
 
         self.ls(dirname(remote))
@@ -172,11 +165,11 @@ class Drive():
             "mimeType": 'application/vnd.google-apps.folder',
             "parents": [parent]
         }
-        f = self.__api().create(body=file_metadata, fields=FILE_FIELDS).execute()
+        f = self.__files().create(body=file_metadata, fields=FILE_FIELDS).execute()
         return self.__add_file(parent_path, f)
 
 
-    def upload(self, local, remote):
+    def upload(self, local, remote) -> Optional[File]:
         """Upload the given [local] file to the [remote] location"""
 
         file_name = basename(remote)
@@ -191,16 +184,16 @@ class Drive():
 
         file_metadata = {'name': file_name, 'parents': [ self.fs[parent_path].id ]}
         media = MediaFileUpload(local)
-        f = self.__api().create(body=file_metadata, media_body=media, fields=FILE_FIELDS).execute()
+        f = self.__files().create(body=file_metadata, media_body=media, fields=FILE_FIELDS).execute()
         return self.__add_file(parent_path, f)
 
-    def print_fs(self):
+    def print_fs(self) -> None:
         """Prints information about all files that are currently cached locally."""
 
         for path, _f in sorted(self.fs.items()):
             print(path)
 
-    def ls_all(self):
+    def ls_all(self) -> None:
         """Retrieves information about all non-trashed files in the drive"""
 
         frontier = [ "/" ]
@@ -211,7 +204,7 @@ class Drive():
                 if f.is_dir and not f.trashed:
                     frontier.append(f.path)
 
-    def rm(self, remote):
+    def rm(self, remote) -> None:
         """Moves the given file to the trash."""
 
         if not self.__locate_file(remote):
@@ -224,6 +217,6 @@ class Drive():
             "trashed": True
         }
 
-        _new_data = self.__api().update(fileId=f.id, body=metadata, fields=FILE_FIELDS).execute()
+        _new_data = self.__files().update(fileId=f.id, body=metadata, fields=FILE_FIELDS).execute()
         self.__rm_file(f)
         return None

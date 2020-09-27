@@ -6,8 +6,7 @@ import csv
 import argparse
 from .perms import DRIVE_READONLY, SHEET_READONLY, SHEET_FULL
 from .drive import Drive
-from .sheets_api import SheetsApi
-from .spreadsheet import Spreadsheet
+from .sheets import Sheets
 
 BLUE = "\033[94m"
 NOCOLOR = "\033[0m"
@@ -33,7 +32,7 @@ def ls(args) -> None:
 
 def csv_download(args):
     drive = Drive(DRIVE_READONLY, credentials=args.creds, token=args.drive_token)
-    api = SheetsApi(SHEET_READONLY, credentials=args.creds, token=args.sheets_token)
+    sheets = Sheets(SHEET_READONLY, credentials=args.creds, token=args.sheets_token)
 
     drive.ls(args.SPREADSHEET)
     if args.SPREADSHEET not in drive.fs:
@@ -41,7 +40,7 @@ def csv_download(args):
         sys.exit(-1)
 
     f = drive.fs[args.SPREADSHEET]
-    sheet = Spreadsheet(api, f.id)
+    sheet = sheets.get_spreadsheet(f.id)
     data  = sheet.get_data(sheet_name=args.SHEET)
 
     if args.CSV is None:
@@ -54,14 +53,14 @@ def csv_download(args):
 
 def csv_upload(args):
     drive  = Drive(DRIVE_READONLY, credentials=args.creds, token=args.drive_token)
-    api = SheetsApi(SHEET_FULL, credentials=args.creds, token=args.sheets_token)
+    sheets = Sheets(SHEET_FULL, credentials=args.creds, token=args.sheets_token)
 
     drive.ls(args.SPREADSHEET)
     if args.SPREADSHEET not in drive.fs:
         print("File not found")
         sys.exit(-1)
     f = drive.fs[args.SPREADSHEET]
-    sheet = Spreadsheet(api, f.id)
+    sheet = sheets.get_spreadsheet(f.id)
     sheet.upload_csv(args.CSV, args.SHEET)
 
 def main():
