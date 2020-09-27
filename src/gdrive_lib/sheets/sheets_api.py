@@ -3,7 +3,7 @@
 from typing import Any
 from googleapiclient.discovery import build # type: ignore
 from httplib2 import Http # type: ignore
-from .api_utils import init_credentials
+from ..api_utils import init_credentials
 
 class SheetsApi:
     """Handles interactions with Sheet documents."""
