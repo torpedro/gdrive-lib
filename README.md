@@ -15,6 +15,12 @@ bin/gdrive scp drive:/test.pdf ~/test.pdf
 
 # Upload a file
 bin/gdrive scp ~/test.pdf drive:/test.pdf
+
+# Download a sheet as CSV
+bin/gdrive csv-download "/My Spreadheet" "Sheet 1" ~/output.csv
+
+# Upload a CSV into a spreadsheet
+bin/gdrive csv-uploadt "/My Spreadsheet" "Upload" ~/upload.csv
 ```
 
 ## Setup
