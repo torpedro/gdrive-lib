@@ -4,9 +4,10 @@ import sys
 import os
 import csv
 import argparse
-from .perms import DRIVE_READONLY, SHEET_READONLY, SHEET_FULL
 from .drive.drive import Drive
+from .drive.drive_api import DRIVE_READONLY
 from .sheets.sheets import Sheets
+from .sheets.sheets_api import SHEET_FULL, SHEET_READONLY
 
 BLUE = "\033[94m"
 NOCOLOR = "\033[0m"

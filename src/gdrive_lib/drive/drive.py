@@ -5,7 +5,7 @@ import datetime
 from typing import List, Optional
 from os.path import join, basename, dirname
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload # type: ignore
-from .drive_api import DriveApi
+from .drive_api import DriveApi, DRIVE_READONLY
 
 ROOT = {
     "id": "root",
@@ -40,9 +40,8 @@ class File():
 class Drive():
     """Handles interactions with the Google Drive filesystem."""
 
-    # If [scope] is modified, token.json needs to be deleted.
     def __init__(self,
-            scope="https://www.googleapis.com/auth/drive.readonly",
+            scope=DRIVE_READONLY,
             credentials="credentials.json",
             token="token.json"):
         self.__api = DriveApi(scope, credentials, token)

@@ -5,14 +5,13 @@ from googleapiclient.discovery import build # type: ignore
 from httplib2 import Http # type: ignore
 from ..api_utils import init_credentials
 
+SHEET_READONLY = "https://www.googleapis.com/auth/spreadsheets.readonly"
+SHEET_FULL     = "https://www.googleapis.com/auth/spreadsheets"
+
 class SheetsApi:
     """Handles interactions with Sheet documents."""
 
-    def __init__(self,
-            scope="https://www.googleapis.com/auth/spreadsheets.readonly",
-            credentials="credentials.json",
-            token="token.json") -> None:
-
+    def __init__(self, scope, credentials, token) -> None:
         creds = init_credentials(credentials, token, scope)
         self.__service = build('sheets', 'v4', http=creds.authorize(Http()))
 
