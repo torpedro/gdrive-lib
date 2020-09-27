@@ -104,36 +104,36 @@ def main():
     parser.set_defaults(func=print_help)
     subparsers = parser.add_subparsers()
 
-    def new_drive_subparser(cmd, func):
-        sub = subparsers.add_parser(cmd)
+    def new_drive_subparser(cmd, func, **kwargs):
+        sub = subparsers.add_parser(cmd, **kwargs)
         sub.add_argument("--creds", default="credentials.json", metavar="CREDENTIALS.JSON")
         sub.add_argument("--token", default="token.json", metavar="TOKEN.JSON", dest="drive_token")
         sub.set_defaults(func=func)
         return sub
 
-    def new_sheets_subparser(cmd, func):
-        sub = subparsers.add_parser(cmd)
+    def new_sheets_subparser(cmd, func, **kwargs):
+        sub = subparsers.add_parser(cmd, **kwargs)
         sub.add_argument("--creds", default="credentials.json", metavar="CREDENTIALS.JSON")
         sub.add_argument("--drive-token", default="token.json", metavar="TOKEN.JSON")
         sub.add_argument("--sheets-token", default="token.json", metavar="TOKEN.JSON")
         sub.set_defaults(func=func)
         return sub
 
-    p_ls = new_drive_subparser("ls", ls)
+    p_ls = new_drive_subparser("ls", ls, help="List all files at the given path")
     p_ls.add_argument("path", type=str, metavar="PATH")
     p_ls.add_argument("-l", action='store_true')
 
-    p_scp = new_drive_subparser("scp", scp)
-    p_scp.add_argument("src", type=ScpArgs, metavar="SOURCE")
+    p_scp = new_drive_subparser("scp", scp, help="Transfer files between the local host and the drive")
+    p_scp.add_argument("src", type=ScpArgs, metavar="SOURCE", help="Local path (e.g. ~/test.pdf) or remote path (e.g. drive:/test.pdf)")
     p_scp.add_argument("dst", type=ScpArgs, metavar="TARGET")
 
-    p_csv_download = new_sheets_subparser("csv-download", csv_download)
+    p_csv_download = new_sheets_subparser("csv-download", csv_download, help="Downloads the given sheet in a CSV format")
     p_csv_download.add_argument("SPREADSHEET", type=str, help="Path to the SPREADSHEET")
     p_csv_download.add_argument("SHEET", type=str, help="Name of the SHEET within the spreadsheet")
     p_csv_download.add_argument("CSV", type=str, default=None, nargs="?",
         help="Write output to this CSV file. Printing to stdout if not specified")
 
-    p_csv_upload = new_sheets_subparser("csv-upload", csv_upload)
+    p_csv_upload = new_sheets_subparser("csv-upload", csv_upload, help="Upload a CSV into the given sheet")
     p_csv_upload.add_argument("SPREADSHEET", type=str, help="Path to the SPREADSHEET")
     p_csv_upload.add_argument("SHEET", type=str, help="Name of the SHEET within the spreadsheet")
     p_csv_upload.add_argument("CSV", type=str)
