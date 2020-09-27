@@ -70,11 +70,10 @@ class ScpArgs:
     path : str
 
     def __init__(self, path):
-        m = re.match(r"^drive:(.+)$", path)
-        if m:
+        match = re.match(r"^drive:(.+)$", path)
+        if match:
             self.is_remote = True
-            self.path = m.group(1)
-            print(m.group(1))
+            self.path = match.group(1)
         else:
             self.is_remote = False
             self.path = path
@@ -89,14 +88,11 @@ def scp(args):
         drive = Drive(DRIVE_READONLY, credentials=args.creds, token=args.drive_token)
         drive.ls(src.path)
         drive.download(src.path, dst.path)
-
     elif (not src.is_remote) and dst.is_remote:
         print("Uploading %s to %s" % (src.path, dst.path))
         drive = Drive(DRIVE_PER_FILE, credentials=args.creds, token=args.drive_token)
         drive.ls(dst.path)
         drive.upload(src.path, dst.path)
-
-
     else:
         print("One of the two given paths must be local while the other is remote!")
         sys.exit(-1)
@@ -127,9 +123,9 @@ def main():
     p_ls.add_argument("path", type=str, metavar="PATH")
     p_ls.add_argument("-l", action='store_true')
 
-    p_ls = new_drive_subparser("scp", scp)
-    p_ls.add_argument("src", type=ScpArgs, metavar="SOURCE")
-    p_ls.add_argument("dst", type=ScpArgs, metavar="TARGET")
+    p_scp = new_drive_subparser("scp", scp)
+    p_scp.add_argument("src", type=ScpArgs, metavar="SOURCE")
+    p_scp.add_argument("dst", type=ScpArgs, metavar="TARGET")
 
     p_csv_download = new_sheets_subparser("csv-download", csv_download)
     p_csv_download.add_argument("SPREADSHEET", type=str, help="Path to the SPREADSHEET")
