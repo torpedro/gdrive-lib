@@ -20,10 +20,10 @@ def upload_all_files_to_a_dated_directory(source_dir):
     dated_dir = os.path.join(remote_dir, date)
 
     drive.ls(remote_dir)
-    if remote_dir not in drive.fs:
+    if not drive.fs.file_exists_at_path(remote_dir):
         drive.mkdir(remote_dir)
 
-    if not dated_dir in drive.fs:
+    if not drive.fs.file_exists_at_path(dated_dir):
         drive.mkdir(dated_dir)
 
     # Upload the files

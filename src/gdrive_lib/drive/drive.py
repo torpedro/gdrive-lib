@@ -2,40 +2,14 @@
 
 import io
 import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict
 from os.path import join, basename, dirname
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload # type: ignore
 from .drive_api import DriveApi, DRIVE_READONLY
-
-ROOT = {
-    "id": "root",
-    "name": "",
-    "parents": [],
-    "mimeType": "application/vnd.google-apps.folder"
-}
+from .file import File
+from .filesystem import Filesystem
 
 FILE_FIELDS = 'id, name, parents, mimeType, trashed, modifiedTime'
-
-class File():
-    """Represents what we know about a file on the Google Drive."""
-
-    def __init__(self, base_path, data):
-        self.data = data
-        self.id = data['id']
-        self.name = data['name']
-        self.parents = data['parents']
-        self.is_dir = data['mimeType'] == "application/vnd.google-apps.folder"
-
-        if "trashed" in data:
-            self.trashed = data["trashed"]
-        else:
-            self.trashed = False
-
-        if "modifiedTime" in data:
-            self.modified_time = datetime.datetime.strptime(
-                data["modifiedTime"], "%Y-%m-%dT%H:%M:%S.%fZ")
-
-        self.path = join(base_path, self.name)
 
 class Drive():
     """Handles interactions with the Google Drive filesystem."""
@@ -45,51 +19,41 @@ class Drive():
             credentials="credentials.json",
             token="token.json"):
         self.__api = DriveApi(scope, credentials, token)
-        self.id_map = {}
-        self.fs = {}
-        self.__add_file("/", ROOT)
+        self.fs = Filesystem()
 
     def __files(self):
         return self.__api.files()
 
     def __add_file(self, base_path, data) -> Optional[File]:
         """Creates a new file in our internal cache of the Drive fs."""
-
         f = File(base_path, data)
-        if f.trashed:
-            return None
-
-        self.id_map[f.id] = f
-        self.fs[f.path] = f
-        return f
+        return self.fs.add_file(f)
 
     def __rm_file(self, f) -> None:
         """Removes a file from our internal cache of the Drive fs."""
-
-        del self.id_map[f.id]
-        del self.fs[f.path]
+        self.fs.remove_file(f)
 
     def __locate_file(self, remote) -> bool:
         """Returns true if the file exists on the remote Drive fs."""
 
-        if remote in self.fs:
+        if self.fs.file_exists_at_path(remote):
             return True
 
         self.ls(dirname(remote))
-        return remote in self.fs
+        return self.fs.file_exists_at_path(remote)
 
     def ls(self, path) -> List[File]:
         """Tries to find the file at the path and all its children if it's a folder."""
 
-        if path not in self.fs:
+        if not self.fs.file_exists_at_path(path):
             parent = dirname(path)
             if parent == path:
                 assert path == "/"
             self.ls(parent)
-            if path not in self.fs:
+            if not self.fs.file_exists_at_path(path):
                 return []
 
-        parent = self.fs[path].id
+        parent = self.fs.by_path(path).id
 
         query = "'%s' in parents" % (parent)
         fields = "nextPageToken, files(%s)" % (FILE_FIELDS)
@@ -108,11 +72,11 @@ class Drive():
     def download(self, remote, local) -> None:
         """Downloads the contents of the [remote] file and writes them to the [local] target."""
 
-        if not remote in self.fs:
+        if not self.fs.file_exists_at_path(remote):
             print("Can not download the file because we can't find anything at that path.", remote)
             return None
 
-        f = self.fs[remote]
+        f = self.fs.by_path(remote)
 
         if f.is_dir:
             print("Can not download a directory.", remote)
@@ -129,8 +93,8 @@ class Drive():
     def mv(self, path, to_folder) -> Optional[File]:
         """Move the file at [path] to the given folder"""
 
-        f = self.fs[path]
-        folder_id = self.fs[to_folder].id
+        f = self.fs.by_path(path)
+        folder_id = self.fs.by_path(to_folder).id
 
         # Retrieve the existing parents to remove
         old_data = self.__files().get(fileId=f.id, fields='parents').execute()
@@ -149,7 +113,7 @@ class Drive():
         """Creates a new folder if nothing exists at that path yet."""
 
         self.ls(dirname(remote))
-        if remote in self.fs:
+        if self.fs.file_exists_at_path(remote):
             # Something already exists at that path
             print("Can not create directory because something already exists at the path.", remote)
             return None
@@ -157,7 +121,7 @@ class Drive():
         folder_name = basename(remote)
         parent_path = dirname(remote)
 
-        parent = self.fs[parent_path].id
+        parent = self.fs.by_path(parent_path).id
 
         file_metadata = {
             "name": folder_name,
@@ -181,16 +145,14 @@ class Drive():
             print("Can not upload file because folder does not exist.", parent_path)
             return None
 
-        file_metadata = {'name': file_name, 'parents': [ self.fs[parent_path].id ]}
+        file_metadata = {'name': file_name, 'parents': [ self.fs.by_path(parent_path).id ]}
         media = MediaFileUpload(local)
         f = self.__files().create(body=file_metadata, media_body=media, fields=FILE_FIELDS).execute()
         return self.__add_file(parent_path, f)
 
     def print_fs(self) -> None:
         """Prints information about all files that are currently cached locally."""
-
-        for path, _f in sorted(self.fs.items()):
-            print(path)
+        self.fs.print()
 
     def ls_all(self) -> None:
         """Retrieves information about all non-trashed files in the drive"""
@@ -210,8 +172,7 @@ class Drive():
             print("Can not find anything at the path.", remote)
             return None
 
-
-        f = self.fs[remote]
+        f = self.fs.by_path(remote)
         metadata = {
             "trashed": True
         }

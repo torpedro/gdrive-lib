@@ -36,11 +36,11 @@ def csv_download(args):
     sheets = Sheets(SHEET_READONLY, credentials=args.creds, token=args.sheets_token)
 
     drive.ls(args.SPREADSHEET)
-    if args.SPREADSHEET not in drive.fs:
+    if drive.fs.file_exists_at_path(args.SPREADSHEET):
         print("File not found")
         sys.exit(-1)
 
-    f = drive.fs[args.SPREADSHEET]
+    f = drive.fs.by_path(args.SPREADSHEET)
     sheet = sheets.get_spreadsheet(f.id)
     data  = sheet.get_data(sheet_name=args.SHEET)
 
@@ -57,10 +57,10 @@ def csv_upload(args):
     sheets = Sheets(SHEET_FULL, credentials=args.creds, token=args.sheets_token)
 
     drive.ls(args.SPREADSHEET)
-    if args.SPREADSHEET not in drive.fs:
+    if drive.fs.file_exists_at_path(args.SPREADSHEET):
         print("File not found")
         sys.exit(-1)
-    f = drive.fs[args.SPREADSHEET]
+    f = drive.fs.by_path(args.SPREADSHEET)
     sheet = sheets.get_spreadsheet(f.id)
     sheet.upload_csv(args.CSV, args.SHEET)
 
