@@ -24,16 +24,16 @@ class Drive():
     def __files(self):
         return self.__api.files()
 
-    def __add_file(self, base_path, data) -> Optional[File]:
+    def __add_file(self, base_path : str, data) -> Optional[File]:
         """Creates a new file in our internal cache of the Drive fs."""
         f = File(base_path, data)
         return self.fs.add_file(f)
 
-    def __rm_file(self, f) -> None:
+    def __rm_file(self, f : File) -> None:
         """Removes a file from our internal cache of the Drive fs."""
         self.fs.remove_file(f)
 
-    def __locate_file(self, remote) -> bool:
+    def __locate_file(self, remote : str) -> bool:
         """Returns true if the file exists on the remote Drive fs."""
 
         if self.fs.file_exists_at_path(remote):
