@@ -34,7 +34,7 @@ class Spreadsheet:
         if len(matching_sheets) > 0:
             sheet = matching_sheets[0]
 
-        with open(local) as fh:
+        with open(local, "r") as fh:
             reader = csv.reader(fh, delimiter=delimiter)
             lines = list(reader)
 
@@ -44,7 +44,7 @@ class Spreadsheet:
                 rows = len(lines)
                 cols = max([len(line) for line in lines])
                 self.resize_sheet(sheet, rows, cols)
-            self.write_data(lines, sheet_name, cell=cell)
+            self.write_data(lines, sheet_name=sheet_name, cell=cell)
 
     def add_sheet(self, sheet_name) -> None:
         """Add a sheet with the given name to the file"""
@@ -117,7 +117,7 @@ class Spreadsheet:
         self.__api.batch_update(self.file_id, requests)
 
 
-    def write_data(self, values, remote_file_id, sheet_name=None, cell="A1") -> None:
+    def write_data(self, values, sheet_name=None, cell="A1") -> None:
         """Writes the given values into the cells within the given sheet."""
 
         if sheet_name is not None:
@@ -126,7 +126,7 @@ class Spreadsheet:
         body = { "values": values }
 
         self.__api.values().update(
-            spreadsheetId=remote_file_id,
+            spreadsheetId=self.file_id,
             range=cell,
             body=body,
             valueInputOption="USER_ENTERED").execute()
