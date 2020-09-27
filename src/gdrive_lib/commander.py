@@ -3,9 +3,11 @@
 import sys
 import os
 import csv
+import argparse
 from .perms import DRIVE_READONLY, SHEET_READONLY, SHEET_FULL
 from .drive import Drive
-from .sheets import SheetsApi, Spreadsheet
+from .sheets_api import SheetsApi
+from .spreadsheet import Spreadsheet
 
 BLUE = "\033[94m"
 NOCOLOR = "\033[0m"
@@ -30,7 +32,7 @@ def ls(args) -> None:
             print("%s%s%s" % (color, full_path, NOCOLOR))
 
 def csv_download(args):
-    drive  = Drive(DRIVE_READONLY, credentials=args.creds, token=args.drive_token)
+    drive = Drive(DRIVE_READONLY, credentials=args.creds, token=args.drive_token)
     api = SheetsApi(SHEET_READONLY, credentials=args.creds, token=args.sheets_token)
 
     drive.ls(args.SPREADSHEET)
@@ -52,18 +54,17 @@ def csv_download(args):
 
 def csv_upload(args):
     drive  = Drive(DRIVE_READONLY, credentials=args.creds, token=args.drive_token)
-    sheets = SheetsApi(SHEET_FULL, credentials=args.creds, token=args.sheets_token)
+    api = SheetsApi(SHEET_FULL, credentials=args.creds, token=args.sheets_token)
 
     drive.ls(args.SPREADSHEET)
     if args.SPREADSHEET not in drive.fs:
         print("File not found")
         sys.exit(-1)
     f = drive.fs[args.SPREADSHEET]
-    sheet = Spreadsheet(sheets, f.id)
+    sheet = Spreadsheet(api, f.id)
     sheet.upload_csv(args.CSV, args.SHEET)
 
-if __name__ == "__main__":
-    import argparse
+def main():
     parser = argparse.ArgumentParser()
     def print_help(_arg):
         parser.print_help()
@@ -85,7 +86,6 @@ if __name__ == "__main__":
         sub.set_defaults(func=func)
         return sub
 
-
     p_ls = new_drive_subparser("ls", ls)
     p_ls.add_argument("path", type=str, metavar="PATH")
     p_ls.add_argument("-l", action='store_true')
@@ -101,7 +101,10 @@ if __name__ == "__main__":
     p_csv_upload.add_argument("SHEET", type=str, help="Name of the SHEET within the spreadsheet")
     p_csv_upload.add_argument("CSV", type=str)
 
-    pargs, unknown_args = parser.parse_known_args()
+    args, unknown_args = parser.parse_known_args()
     sys.argv = [sys.argv[0]] + unknown_args
 
-    pargs.func(pargs)
+    args.func(args)
+
+if __name__ == "__main__":
+    main()

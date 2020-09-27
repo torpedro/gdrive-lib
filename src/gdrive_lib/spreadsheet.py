@@ -2,41 +2,9 @@
 
 import csv
 from typing import Any, List, Optional
-from googleapiclient.discovery import build # type: ignore
-from httplib2 import Http # type: ignore
-from .drive_api_utils import init_credentials
+from .sheets_api import SheetsApi
 
-class SheetsApi:
-    """Handles interactions with Sheet documents."""
-
-    def __init__(self,
-            scope="https://www.googleapis.com/auth/spreadsheets.readonly",
-            credentials="credentials.json",
-            token="token.json") -> None:
-        creds = init_credentials(credentials, token, scope)
-        self.service = build('sheets', 'v4', http=creds.authorize(Http()))
-
-    def __api(self) -> Any:
-        # pylint: disable=E1101
-        return self.service.spreadsheets()
-
-    def values(self) -> Any:
-        return self.__api().values()
-
-    def get(self, spreadsheet_id) -> Any:
-        return self.__api().get(spreadsheetId=spreadsheet_id)
-
-    def batch_update(self, file_id, requests) -> None:
-        """Send the given batch update [requests] for the given file"""
-
-        if len(requests) > 0:
-            body = { "requests": requests }
-            self.__api().batchUpdate(spreadsheetId=file_id, body=body).execute()
-
-
-
-
-class Spreadsheet():
+class Spreadsheet:
     __api : SheetsApi
     file_id : str
 
