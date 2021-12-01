@@ -3,11 +3,7 @@ import sys
 import os
 from datetime import datetime
 
-dirname = os.path.dirname(__file__)
-sys.path.append(("%s/.." % (dirname)))
-# pylint: disable=wrong-import-position
 from gdrive_lib.drive.drive import Drive
-# pylint: enable=wrong-import-position
 
 def download_all_files_in_directory(remote_dir, download_dir):
     """Downloads all files in the Google Drive directory at [remote_dir] (not recursively)

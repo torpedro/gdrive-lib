@@ -1,7 +1,9 @@
 
 lint:
-	python3 -m mypy src/**/*.py
-	python3 -m pylint src/**/*.py
+	python3 -m mypy gdrive_lib/**/*.py
+	python3 -m mypy examples/*.py
+	python3 -m pylint gdrive_lib/**/*.py
+	python3 -m pylint examples/*.py
 
 setup-venv:
 	python3 -m venv .google-drive-venv

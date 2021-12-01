@@ -2,12 +2,8 @@
 import sys
 import os
 import datetime
-dirname = os.path.dirname(__file__)
-sys.path.append(("%s/.." % (dirname)))
 
-# pylint: disable=wrong-import-position
 from gdrive_lib.drive.drive import Drive
-# pylint: enable=wrong-import-position
 
 def upload_all_files_to_a_dated_directory(source_dir):
     """Uploads all the files in the given local directory to a dated directory under /archive in Google Drive. Creates the remote directories if they don't exist"""
